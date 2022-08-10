@@ -1,8 +1,13 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, LoggerService } from '@nestjs/common';
+import { AppRepository } from './app.repository';
+import { CustomLogger } from './logger/custom-logger';
 
 @Injectable()
 export class AppService {
-  getHello(): string {
-    return 'Hello World!';
+  constructor(private readonly appRepository: AppRepository, private readonly loggerService: CustomLogger) {}
+
+  async getHello() {
+    this.loggerService.log('Log in service');
+    return this.appRepository.getHello();
   }
 }
