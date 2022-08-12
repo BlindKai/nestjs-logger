@@ -1,37 +1,30 @@
-import { ConsoleLogger, LoggerService } from '@nestjs/common';
+import { ConsoleLogger, Injectable, Logger, LoggerService, Scope } from '@nestjs/common';
 import { getAsyncContext } from './async-context';
 
-export class CustomLogger extends ConsoleLogger {
-  log(message: any, context?: string): void;
-  log(message: any, ...optionalParams: any[]): void;
+@Injectable({ scope: Scope.TRANSIENT })
+export class CustomLogger extends ConsoleLogger implements LoggerService {
   log(message: unknown, context?: unknown, ...rest: unknown[]): void {
-    const loggerMessage = `${this.formatRequestId()}${message}`;
+    const serializable: Record<string, any> = { message };
+    const requestId = this.getRequestId();
 
-    if (context) super.log(loggerMessage, context);
-    else super.log(loggerMessage);
+    if (requestId) serializable.requestId = requestId;
+
+    super.log(JSON.stringify(serializable), this.context || context);
   }
 
-  error(message: string, stack?: string, context?: string): void;
-  error(message: string, ...optionalParams: any[]): void;
-  error(messageOrError: string | Error, stack?: unknown, context?: unknown): void {
-    const loggerMessage = `${this.formatRequestId()}${messageOrError}`;
+  error(message: string, error?: any, context?: unknown): void {
+    const serializable: Record<string, any> = { message, stack: error?.stack };
+    const requestId = this.getRequestId();
 
-    if (messageOrError instanceof Error) {
-      super.error(this.formatRequestId() + messageOrError, messageOrError.stack);
-    } else if (context) {
-      super.error(loggerMessage, stack, context);
-    } else {
-      super.error(loggerMessage, stack);
-    }
+    if (requestId) serializable.requestId = requestId;
+
+    const errorOrStack = error instanceof Error ? error.stack : error;
+
+    super.error(JSON.stringify(serializable), this.context || context);
   }
 
   private getRequestId() {
     const ctx = getAsyncContext();
     return ctx?.reqId;
-  }
-
-  private formatRequestId() {
-    const reqId = this.getRequestId();
-    return reqId ? `[${reqId}]: ` : '';
   }
 }

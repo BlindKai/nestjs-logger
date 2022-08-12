@@ -1,14 +1,11 @@
 import { NestFactory } from '@nestjs/core';
-import { AppModule } from './app.module';
-import { attachContextMiddleware } from './logger/async-context';
+import { AppModule } from './modules/app/app.module';
 import { CustomLogger } from './logger/custom-logger';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule, { bufferLogs: false });
+  const app = await NestFactory.create(AppModule, { bufferLogs: true });
 
-  app.use(attachContextMiddleware);
-
-  app.useLogger(app.get(CustomLogger));
+  app.useLogger(new CustomLogger());
 
   await app.listen(3000);
 }

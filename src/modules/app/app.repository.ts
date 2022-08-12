@@ -1,9 +1,11 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { CustomLogger } from './logger/custom-logger';
+import { CustomLogger } from '../../logger/custom-logger';
 
 @Injectable()
 export class AppRepository {
-  constructor(private readonly logger: CustomLogger) {}
+  constructor(private readonly logger: CustomLogger) {
+    this.logger.setContext(AppRepository.name)
+  }
 
   async getHello() {
     this.logger.log('Log in repository');
@@ -21,7 +23,7 @@ export class AppRepository {
         this.logger.log('Promise #3');
         throw new Error("Didn't go well :C");
       } catch (error) {
-        this.logger.error(error);
+        this.logger.error('There is an issue', error);
         throw new NotFoundException('Something is definitely wrong');
       }
     });
